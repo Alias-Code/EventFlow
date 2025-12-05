@@ -10,8 +10,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^7.1.0",
+    "@prisma/adapter-pg": "^6.19.0",
+    "@prisma/client": "^6.19.0",
     "@types/node": "^24.10.1",
     "amqplib": "^0.10.9",
     "next": "16.0.7",
@@ -24,7 +24,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
-    "prisma": "^7.1.0",
+    "prisma": "^6.19.0",
     "tailwindcss": "^4"
   }
 }
