@@ -27,5 +27,18 @@ services:
     ports:
       - "9090:8080"
 
+  auth-service:
+    build: ./services/auth-service
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@postgres:5432/eventflow?schema=public
+      JWT_SECRET: secretKey
+      PORT: 3001
+    depends_on:
+      - postgres
+      - rabbitmq
+
 volumes:
   postgres_data:
