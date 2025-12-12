@@ -96,6 +96,9 @@ const templates = {
   eventCancelled: (data) => ({
     subject: `⚠️ URGENT - Annulation : ${data.eventName}`,
     html: `
+      <header style="background: #ef4444; color: white; padding: 20px; text-align: center;">
+        <img src="https://media.discordapp.net/attachments/301802894838202378/1449048407317676134/eventflow-logo.png?ex=693d7afe&is=693c297e&hm=2352743cd7e2d880001bb743d25b6b45a98d76e795af7d2f91d1863b04a4150d&=&format=webp&quality=lossless" alt="EventFlow Logo" style="height: 50px;">
+      </header>
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #ef4444; color: white; padding: 40px; text-align: center;">
           <h1 style="margin: 0;">⚠️ Événement Annulé</h1>

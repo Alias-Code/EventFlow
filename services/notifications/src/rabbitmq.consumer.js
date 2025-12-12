@@ -14,30 +14,17 @@ class RabbitMQConsumer {
       this.connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672');
       this.channel = await this.connection.createChannel();
       
-      // Créer l'exchange
       await this.channel.assertExchange('eventflow.events', 'topic', { durable: true });
-      
-      // Créer la queue
       const queue = await this.channel.assertQueue('notifications.queue', { durable: true });
       
-      // Bind les événements
-      const events = [
-        'ticket.booked',
-        'payment.processed',
-        'payment.failed',
-        'event.cancelled'
-      ];
-      
+      const events = ['ticket.booked', 'payment.processed', 'payment.failed', 'event.cancelled'];
       for (const event of events) {
         await this.channel.bindQueue(queue.queue, 'eventflow.events', event);
       }
       
-      console.log('✅ RabbitMQ connected and listening');
-      
-      // Commencer à consommer
       this.consume();
     } catch (error) {
-      console.error('❌ RabbitMQ connection failed:', error);
+      console.error('RabbitMQ connection failed:', error.message);
       setTimeout(() => this.connect(), 5000);
     }
   }
@@ -47,13 +34,10 @@ class RabbitMQConsumer {
       if (msg) {
         try {
           const content = JSON.parse(msg.content.toString());
-          console.log(`📨 Received event: ${content.type}`);
-          
           await this.handleMessage(content);
-          
           this.channel.ack(msg);
         } catch (error) {
-          console.error('Error processing message:', error);
+          console.error('Message processing error:', error.message);
           this.channel.nack(msg, false, false);
         }
       }
@@ -82,43 +66,23 @@ class RabbitMQConsumer {
   }
 
   async handleTicketBooked(data) {
-    console.log('📧 Sending ticket confirmation to:', data.userEmail);
     const template = templates.ticketBooked(data);
-    await this.emailService.sendEmail(
-      data.userEmail,
-      template.subject,
-      template.html
-    );
+    await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
   async handlePaymentProcessed(data) {
-    console.log('📧 Sending payment confirmation to:', data.userEmail);
     const template = templates.paymentSuccess(data);
-    await this.emailService.sendEmail(
-      data.userEmail,
-      template.subject,
-      template.html
-    );
+    await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
   async handlePaymentFailed(data) {
-    console.log('📧 Sending payment failure notice to:', data.userEmail);
     const template = templates.paymentFailed(data);
-    await this.emailService.sendEmail(
-      data.userEmail,
-      template.subject,
-      template.html
-    );
+    await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
   async handleEventCancelled(data) {
-    console.log('📧 Sending cancellation notice to:', data.userEmail);
     const template = templates.eventCancelled(data);
-    await this.emailService.sendEmail(
-      data.userEmail,
-      template.subject,
-      template.html
-    );
+    await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 }
 

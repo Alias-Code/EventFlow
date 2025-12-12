@@ -6,22 +6,11 @@ function createAPI() {
   const app = express();
   const emailService = new EmailService();
   
-  // Middleware pour parser JSON avec gestion d'erreurs
   app.use(express.json({ limit: '1mb' }));
-  
-  // Middleware pour logger les requêtes
-  app.use((req, res, next) => {
-    console.log(`📨 ${req.method} ${req.path}`);
-    if (req.body && Object.keys(req.body).length > 0) {
-      console.log('   Body:', JSON.stringify(req.body).substring(0, 100));
-    }
-    next();
-  });
   
   // Gestion des erreurs de parsing JSON
   app.use((err, req, res, next) => {
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-      console.error('❌ JSON Parse Error:', err.message);
       return res.status(400).json({ error: 'Invalid JSON in request body' });
     }
     next();
@@ -31,26 +20,8 @@ function createAPI() {
   app.get('/health', (req, res) => {
     res.json({ 
       status: 'ok', 
-      service: 'notifications',
-      timestamp: new Date().toISOString()
+      service: 'notifications'
     });
-  });
-
-  // Send test email
-  app.post('/test', async (req, res) => {
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ error: 'Email required' });
-    }
-
-    const result = await emailService.sendEmail(
-      email,
-      '🧪 Test EventFlow',
-      '<h1>Test Email</h1><p>If you receive this, the service is working!</p>'
-    );
-
-    res.json(result);
   });
 
   // Send notification manually
