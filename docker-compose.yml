@@ -1,18 +1,24 @@
+version: '3.8'
+
 services:
   postgres:
-    image: postgres:16
+    image: postgres:15
+    container_name: eventflow-postgres
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: eventflow
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - eventflow-network
 
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: eventflow-rabbitmq
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: admin
@@ -20,12 +26,24 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - eventflow-network
 
   adminer:
     image: adminer
+    container_name: eventflow-adminer
     restart: always
     ports:
       - "9090:8080"
+    networks:
+      - eventflow-network
 
 volumes:
-  postgres_data:
+  postgres-data:
+  rabbitmq-data:
+
+networks:
+  eventflow-network:
+    driver: bridge
