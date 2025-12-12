@@ -4,10 +4,18 @@ import { NextResponse } from 'next/server';
  * Proxy vers les statistiques d'événements
  * Route : /api/stats/events
  */
-export async function GET() {
+export async function GET(request) {
   try {
     const statsServiceUrl = process.env.STATS_SERVICE_URL || 'http://stats-service:3005';
-    const response = await fetch(`${statsServiceUrl}/stats/events`);
+    
+    // Récupérer le token JWT depuis les headers
+    const authHeader = request.headers.get('authorization');
+    const headers = {};
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
+    const response = await fetch(`${statsServiceUrl}/stats/events`, { headers });
 
     if (!response.ok) {
       return NextResponse.json(

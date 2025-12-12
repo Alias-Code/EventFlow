@@ -4,10 +4,18 @@ import { NextResponse } from 'next/server';
  * Proxy vers les statistiques de paiements
  * Route : /api/stats/payments
  */
-export async function GET() {
+export async function GET(request) {
   try {
     const statsServiceUrl = process.env.STATS_SERVICE_URL || 'http://stats-service:3005';
-    const response = await fetch(`${statsServiceUrl}/stats/payments`);
+    
+    // Récupérer le token JWT depuis les headers
+    const authHeader = request.headers.get('authorization');
+    const headers = {};
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
+    const response = await fetch(`${statsServiceUrl}/stats/payments`, { headers });
 
     if (!response.ok) {
       return NextResponse.json(

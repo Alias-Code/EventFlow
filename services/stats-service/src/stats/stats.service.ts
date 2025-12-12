@@ -10,13 +10,31 @@ export class StatsService implements OnModuleInit {
   constructor(private readonly rabbit: RabbitService) {}
 
   async onModuleInit() {
-    await this.rabbit.consume(
-      'stats-service',
-      ['event.*', 'ticket.*', 'payment.*'],
-      async (routingKey, messageId, payload) => {
-        await this.repo.applyEvent(routingKey, messageId, payload);
+    // Connexion RabbitMQ avec retry
+    let retries = 5;
+    let connected = false;
+    
+    while (retries > 0 && !connected) {
+      try {
+        await this.rabbit.consume(
+          'stats-service',
+          ['event.*', 'ticket.*', 'payment.*'],
+          async (routingKey, messageId, payload) => {
+            await this.repo.applyEvent(routingKey, messageId, payload);
+          }
+        );
+        connected = true;
+        console.log('[stats-service] Connected to RabbitMQ');
+      } catch (error) {
+        retries--;
+        console.error(`[stats-service] Failed to connect to RabbitMQ, retries left: ${retries}`, error.message);
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Attendre 2s avant retry
+        } else {
+          console.error('[stats-service] Could not connect to RabbitMQ after retries. Service will continue but stats won\'t be updated from events.');
+        }
       }
-    );
+    }
   }
 
   async getStats(): Promise<StatsSnapshot> {
