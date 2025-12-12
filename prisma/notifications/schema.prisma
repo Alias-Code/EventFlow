@@ -1,0 +1,17 @@
+datasource notificationsDb {
+  provider = "postgresql"
+  url      = env("NOTIFICATIONS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../prisma/generated/notifications"
+}
+
+model MessageLog {
+  id        String   @id @default(cuid())
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
+}
+

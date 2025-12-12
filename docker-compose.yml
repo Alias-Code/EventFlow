@@ -1,20 +1,68 @@
 services:
-  postgres:
+  events-db:
     image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow
+      POSTGRES_DB: eventflow_events
+    ports:
+      - "5432:5432"
+    volumes:
+      - events_data:/var/lib/postgresql/data
+
+  tickets-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_tickets
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - tickets_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  payments-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_payments
+    ports:
+      - "5434:5432"
+    volumes:
+      - payments_data:/var/lib/postgresql/data
+
+  notifications-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_notifications
+    ports:
+      - "5435:5432"
+    volumes:
+      - notifications_data:/var/lib/postgresql/data
+
+  users-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_users
+    ports:
+      - "5436:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -57,4 +105,8 @@ services:
         condition: service_healthy
 
 volumes:
-  postgres_data:
+  events_data:
+  tickets_data:
+  payments_data:
+  notifications_data:
+  users_data:
