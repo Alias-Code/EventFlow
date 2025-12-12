@@ -17,16 +17,11 @@ export const metadata = {
   description: "Event management platform",
 };
 
-import Navbar from "../components/Navbar";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Navbar />
-        <main className="container mx-auto p-4">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );
