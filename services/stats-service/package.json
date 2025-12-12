@@ -11,14 +11,20 @@
     "@nestjs/common": "^10.4.0",
     "@nestjs/core": "^10.4.0",
     "@nestjs/platform-express": "^10.4.0",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/passport": "^10.0.3",
+    "@nestjs/config": "^3.2.0",
     "@prisma/client": "^6.19.0",
     "amqplib": "^0.10.9",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "prisma": "^6.19.0",
     "@types/amqplib": "^0.10.6",
+    "@types/passport-jwt": "^4.0.1",
     "typescript": "^5.6.3"
   }
 }

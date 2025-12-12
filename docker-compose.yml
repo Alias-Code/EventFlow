@@ -170,6 +170,7 @@ services:
       - PORT=3005
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
       - STATS_DATABASE_URL=postgresql://admin:admin@stats-db:5432/eventflow_stats
+      - JWT_SECRET=secretKey
     depends_on:
       rabbitmq:
         condition: service_healthy
