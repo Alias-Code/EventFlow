@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 /**
  * Proxy vers le microservice Payments
  * Route : /api/payments
  */
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
@@ -20,8 +20,9 @@ export async function POST(request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service de paiement indisponible', message: error.message },
+      { error: 'Service de paiement indisponible', message: errorMessage },
       { status: 503 }
     );
   }

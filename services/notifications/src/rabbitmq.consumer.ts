@@ -1,18 +1,30 @@
-const amqp = require('amqplib');
-const EmailService = require('./email.service');
-const templates = require('./templates');
+import amqp from 'amqplib';
+import type { Connection, Channel, Message } from 'amqplib';
+import EmailService from './email.service.js';
+import templates from './templates.js';
+
+interface EventMessage {
+  type: string;
+  payload: any;
+}
 
 class RabbitMQConsumer {
+  private emailService: EmailService;
+  private connection: Connection | null = null;
+  private channel: Channel | null = null;
+
   constructor() {
     this.emailService = new EmailService();
-    this.connection = null;
-    this.channel = null;
   }
 
-  async connect() {
+  async connect(): Promise<void> {
     try {
-      this.connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672');
-      this.channel = await this.connection.createChannel();
+      const conn = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672');
+      this.connection = conn as unknown as Connection;
+      const channel = await (this.connection as any).createChannel();
+      this.channel = channel;
+      
+      if (!this.channel) throw new Error('Failed to create channel');
       
       await this.channel.assertExchange('eventflow.events', 'topic', { durable: true });
       const queue = await this.channel.assertQueue('notifications.queue', { durable: true });
@@ -24,27 +36,31 @@ class RabbitMQConsumer {
       
       this.consume();
     } catch (error) {
-      console.error('RabbitMQ connection failed:', error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('RabbitMQ connection failed:', errorMessage);
       setTimeout(() => this.connect(), 5000);
     }
   }
 
-  async consume() {
-    await this.channel.consume('notifications.queue', async (msg) => {
+  private async consume(): Promise<void> {
+    if (!this.channel) return;
+
+    await this.channel.consume('notifications.queue', async (msg: Message | null) => {
       if (msg) {
         try {
-          const content = JSON.parse(msg.content.toString());
+          const content: EventMessage = JSON.parse(msg.content.toString());
           await this.handleMessage(content);
-          this.channel.ack(msg);
+          this.channel!.ack(msg);
         } catch (error) {
-          console.error('Message processing error:', error.message);
-          this.channel.nack(msg, false, false);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error('Message processing error:', errorMessage);
+          this.channel!.nack(msg, false, false);
         }
       }
     });
   }
 
-  async handleMessage(message) {
+  private async handleMessage(message: EventMessage): Promise<void> {
     const { type, payload } = message;
     
     switch(type) {
@@ -65,25 +81,25 @@ class RabbitMQConsumer {
     }
   }
 
-  async handleTicketBooked(data) {
+  private async handleTicketBooked(data: any): Promise<void> {
     const template = templates.ticketBooked(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  async handlePaymentProcessed(data) {
+  private async handlePaymentProcessed(data: any): Promise<void> {
     const template = templates.paymentSuccess(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  async handlePaymentFailed(data) {
+  private async handlePaymentFailed(data: any): Promise<void> {
     const template = templates.paymentFailed(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  async handleEventCancelled(data) {
+  private async handleEventCancelled(data: any): Promise<void> {
     const template = templates.eventCancelled(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 }
 
-module.exports = RabbitMQConsumer;
+export default RabbitMQConsumer;

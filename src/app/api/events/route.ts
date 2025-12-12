@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 /**
  * Proxy vers le microservice Events
  * Route : /api/events
  */
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
@@ -17,14 +17,15 @@ export async function GET(request) {
     
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service des événements indisponible', message: error.message },
+      { error: 'Service des événements indisponible', message: errorMessage },
       { status: 503 }
     );
   }
 }
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
@@ -40,8 +41,9 @@ export async function POST(request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service des événements indisponible', message: error.message },
+      { error: 'Service des événements indisponible', message: errorMessage },
       { status: 503 }
     );
   }

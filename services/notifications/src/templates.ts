@@ -1,5 +1,33 @@
+interface EmailTemplate {
+  subject: string;
+  html: string;
+}
+
+interface TicketBookedData {
+  eventName: string;
+  userName: string;
+  userEmail: string;
+  eventDate: string;
+  eventLocation: string;
+  ticketId: string;
+}
+
+interface PaymentData {
+  userName: string;
+  userEmail: string;
+  amount: number;
+  transactionId: string;
+}
+
+interface EventCancelledData {
+  eventName: string;
+  userName: string;
+  userEmail: string;
+  refundStatus: string;
+}
+
 const templates = {
-  ticketBooked: (data) => ({
+  ticketBooked: (data: TicketBookedData): EmailTemplate => ({
     subject: `🎫 Confirmation - ${data.eventName}`,
     html: `
       <!DOCTYPE html>
@@ -30,7 +58,7 @@ const templates = {
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit'
-                    })}
+                    } as any)}
                   </td>
                 </tr>
                 <tr>
@@ -64,7 +92,7 @@ const templates = {
               Contactez-nous : support@eventflow.com
             </p>
             <p style="margin: 20px 0 0 0; font-size: 12px; color: #718096;">
-              © 2024 EventFlow - Projet Architecture Logicielle
+              © 2025 EventFlow - Projet Architecture Logicielle
             </p>
           </div>
         </div>
@@ -73,7 +101,7 @@ const templates = {
     `
   }),
 
-  paymentSuccess: (data) => ({
+  paymentSuccess: (data: PaymentData): EmailTemplate => ({
     subject: `✅ Paiement confirmé - ${data.amount}€`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -93,54 +121,43 @@ const templates = {
     `
   }),
 
-  eventCancelled: (data) => ({
+  eventCancelled: (data: EventCancelledData): EmailTemplate => ({
     subject: `⚠️ URGENT - Annulation : ${data.eventName}`,
     html: `
       <header style="background: #ef4444; color: white; padding: 20px; text-align: center;">
-        <img src="https://media.discordapp.net/attachments/301802894838202378/1449048407317676134/eventflow-logo.png?ex=693d7afe&is=693c297e&hm=2352743cd7e2d880001bb743d25b6b45a98d76e795af7d2f91d1863b04a4150d&=&format=webp&quality=lossless" alt="EventFlow Logo" style="height: 50px;">
+        <h1 style="margin: 0;">⚠️ Événement Annulé</h1>
       </header>
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #ef4444; color: white; padding: 40px; text-align: center;">
-          <h1 style="margin: 0;">⚠️ Événement Annulé</h1>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #f8f9fa;">
+        <h2>Bonjour ${data.userName},</h2>
+        <p style="color: #4a5568;">Nous regrettons de vous informer que l'événement suivant a été annulé :</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #ef4444;">
+          <h3 style="margin-top: 0; color: #2d3748;">${data.eventName}</h3>
+          <p style="margin: 10px 0;"><strong>Statut du remboursement :</strong> ${data.refundStatus}</p>
         </div>
-        <div style="padding: 40px; background: #f8f9fa;">
-          <h2>Bonjour ${data.userName},</h2>
-          <p>Nous sommes désolés de vous informer que l'événement suivant a été annulé :</p>
-          <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #ef4444; margin-top: 0;">${data.eventName}</h3>
-            <p>Date prévue : ${new Date(data.eventDate).toLocaleDateString('fr-FR')}</p>
-          </div>
-          <p><strong>🔄 Remboursement automatique sous 5-7 jours ouvrés</strong></p>
-        </div>
+        <p style="color: #4a5568;">Nous nous excusons pour ce désagrément. Pour toute question, contactez-nous.</p>
       </div>
     `
   }),
 
-  paymentFailed: (data) => ({
-    subject: `❌ Échec du paiement - Action requise`,
+  paymentFailed: (data: PaymentData): EmailTemplate => ({
+    subject: `❌ Paiement échoué - Action requise`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #f59e0b; color: white; padding: 40px; text-align: center;">
-          <h1 style="margin: 0;">⚠️ Paiement Échoué</h1>
+        <div style="background: #ef4444; color: white; padding: 40px; text-align: center;">
+          <h1 style="margin: 0;">❌ Paiement Échoué</h1>
         </div>
         <div style="padding: 40px; background: #f8f9fa;">
           <h2>Bonjour ${data.userName},</h2>
-          <p>Votre paiement pour <strong>${data.eventName}</strong> n'a pas pu être traité.</p>
-          <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Raison :</strong> ${data.reason || 'Erreur de traitement'}</p>
+          <p>Votre paiement n'a pas pu être traité.</p>
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #ef4444;">
             <p><strong>Montant :</strong> ${data.amount}€</p>
+            <p><strong>Statut :</strong> Paiement refusé</p>
           </div>
-          <p>Votre réservation sera annulée dans 24h si le paiement n'est pas effectué.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:3000/payment/retry/${data.ticketId}" 
-               style="background: #f59e0b; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
-              Réessayer le paiement
-            </a>
-          </div>
+          <p>Veuillez vérifier vos informations de paiement et réessayer.</p>
         </div>
       </div>
     `
   })
 };
 
-module.exports = templates;
+export default templates;

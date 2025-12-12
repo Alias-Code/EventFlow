@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 /**
  * Health check centralisé - Vérifie l'état de tous les microservices
@@ -36,7 +36,7 @@ export async function GET() {
           name: service.name,
           status: 'INDISPONIBLE',
           url: service.url,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         };
       }
     })
@@ -48,9 +48,9 @@ export async function GET() {
   return NextResponse.json(
     {
       gateway: 'OK',
-      message: allHealthy ? 'Tous les services sont opérationnels' : 'Certains services sont indisponibles',
       timestamp: new Date().toISOString(),
       services: results,
+      allServiceHealthy: allHealthy,
     },
     { status: allHealthy ? 200 : 503 }
   );
