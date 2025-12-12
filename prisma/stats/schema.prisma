@@ -1,0 +1,33 @@
+datasource statsDb {
+  provider = "postgresql"
+  url      = env("STATS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../prisma/generated/stats"
+}
+
+model Aggregates {
+  id                 Int      @id @default(1)
+  eventsTotal        Int      @default(0)
+  eventsCreated      Int      @default(0)
+  eventsUpdated      Int      @default(0)
+  eventsCancelled    Int      @default(0)
+  ticketsBooked      Int      @default(0)
+  ticketsCancelled   Int      @default(0)
+  ticketsAmount      Float    @default(0)
+  paymentsProcessed  Int      @default(0)
+  paymentsFailed     Int      @default(0)
+  paymentsRevenue    Float    @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model IngestedMessage {
+  messageId  String   @id
+  routingKey String
+  payload    Json?
+  receivedAt DateTime @default(now())
+}
+
