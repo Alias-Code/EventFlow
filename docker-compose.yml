@@ -118,6 +118,7 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - AUTH_SERVICE_URL=http://auth-service:3001
     depends_on:
       users-db:
         condition: service_healthy
