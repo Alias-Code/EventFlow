@@ -7,7 +7,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:events": "cross-env PRISMA_MIGRATE_DATASOURCE=eventsDb prisma migrate dev --schema prisma/events/schema.prisma --name init",
+    "migrate:tickets": "cross-env PRISMA_MIGRATE_DATASOURCE=ticketsDb prisma migrate dev --schema prisma/tickets/schema.prisma --name init",
+    "migrate:payments": "cross-env PRISMA_MIGRATE_DATASOURCE=paymentsDb prisma migrate dev --schema prisma/payments/schema.prisma --name init",
+    "migrate:notifications": "cross-env PRISMA_MIGRATE_DATASOURCE=notificationsDb prisma migrate dev --schema prisma/notifications/schema.prisma --name init",
+    "migrate:users": "cross-env PRISMA_MIGRATE_DATASOURCE=usersDb prisma migrate dev --schema prisma/users/schema.prisma --name init"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.19.0",
@@ -25,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "prisma": "^6.19.0",
+    "cross-env": "^7.0.3",
     "tailwindcss": "^4"
   }
 }
