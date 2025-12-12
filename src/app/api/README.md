@@ -119,6 +119,28 @@ const response = await fetch('/api/payments', {
 });
 ```
 
+### Statistiques
+```javascript
+// Toutes les statistiques
+const response = await fetch('/api/stats');
+const allStats = await response.json();
+
+// Statistiques sur les événements uniquement
+const eventsStats = await fetch('/api/stats/events');
+const events = await eventsStats.json();
+// { total: 42, created: 40, updated: 2, cancelled: 0 }
+
+// Statistiques sur les billets uniquement
+const ticketsStats = await fetch('/api/stats/tickets');
+const tickets = await ticketsStats.json();
+// { booked: 320, cancelled: 15, amount: 15432.5 }
+
+// Statistiques sur les paiements uniquement
+const paymentsStats = await fetch('/api/stats/payments');
+const payments = await paymentsStats.json();
+// { processed: 290, failed: 12, revenue: 15432.5 }
+```
+
 ## Configuration
 
 Les URLs des microservices sont configurées dans `.env.local` :
@@ -127,4 +149,5 @@ AUTH_SERVICE_URL=http://auth-service:3001
 EVENT_SERVICE_URL=http://event-service:3002
 TICKET_SERVICE_URL=http://ticket-service:3003
 PAYMENT_SERVICE_URL=http://payment-service:3004
+STATS_SERVICE_URL=http://stats-service:3005
 ```
