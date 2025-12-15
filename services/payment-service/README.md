@@ -8,7 +8,7 @@ Le Payment Service est un microservice NestJS responsable du traitement des paie
 
 ## Architecture
 
-```
+```markdown
 src/
 ├── main.ts                    # Point d'entrée + configuration Swagger
 ├── app.module.ts              # Module racine
@@ -73,7 +73,7 @@ JWT_SECRET=secretKey
 
 ### PaymentStatus (États)
 
-```
+```markdown
 PENDING → PROCESSING → COMPLETED
                     ↘ FAILED
                     ↘ CANCELLED
@@ -216,26 +216,53 @@ PRISMA_MIGRATE_DATASOURCE=paymentsDb npx prisma migrate dev --schema prisma/paym
 
 La documentation Swagger est disponible à l'adresse :
 
-```
+```markdown
 http://localhost:3004/api/docs
 ```
 
 ## Tests
 
 ```bash
-# Tests unitaires
-npm run test
+cd services/payment-service
 
-# Tests e2e
-npm run test:e2e
+# Installer les dépendances (si pas déjà fait)
+npm install
 
-# Couverture
+# Lancer les tests
+npm test
+
+# Mode watch (relance auto)
+npm run test:watch
+
+# Avec rapport de couverture
 npm run test:cov
 ```
 
+### Structure des tests
+
+```markdown
+src/
+├── __mocks__/                    # Mocks pour les dépendances
+│   ├── prisma-payments.ts        # Mock du client Prisma
+│   ├── prisma.service.ts         # Mock du PrismaService
+│   └── rabbit.service.ts         # Mock du RabbitService
+└── payment/
+    └── payment.service.spec.ts   # Tests unitaires (23 tests)
+```
+
+### Couverture des tests
+
+| Fonctionnalité | Tests |
+|----------------|-------|
+| createPayment | Paiements payants et gratuits |
+| processPayment | Succès, échec, exceptions |
+| refundPayment | Remboursement, exceptions |
+| getPayment* | Récupération par ID, user, ticket, event |
+| Event handlers | ticket.booked, ticket.cancelled, event.cancelled |
+
 ## Flux de paiement typique
 
-```
+```markdown
 1. L'utilisateur réserve un ticket
    └── ticket-service publie "ticket.booked"
 
@@ -254,7 +281,7 @@ npm run test:cov
 
 ## Intégration avec les autres services
 
-```
+```markdown
 ┌─────────────────┐     ticket.booked      ┌─────────────────┐
 │                 │ ──────────────────────▶│                 │
 │ Ticket Service  │                        │ Payment Service │

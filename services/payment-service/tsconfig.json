@@ -14,7 +14,7 @@
     "strict": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "exclude": ["node_modules", "dist"]
 }
