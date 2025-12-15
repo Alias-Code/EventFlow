@@ -51,3 +51,5 @@ prisma/generated/
 # local db artefacts
 *.db
 *.sqlite
+
+dist/
