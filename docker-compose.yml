@@ -1,7 +1,39 @@
-version: '3.8'
-
 services:
-  postgres:
+  users-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_users
+    ports:
+      - "5436:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  events-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_events
+    ports:
+      - "5432:5432"
+    volumes:
+      - events_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_events"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tickets-db:
     image: postgres:16
     restart: always
     environment:
@@ -9,9 +41,65 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: eventflow_tickets
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - tickets_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_tickets"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payments-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_payments
+    ports:
+      - "5434:5432"
+    volumes:
+      - payments_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notifications-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_notifications
+    ports:
+      - "5435:5432"
+    volumes:
+      - notifications_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  stats-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_stats
+    ports:
+      - "5437:5432"
+    volumes:
+      - stats_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_stats"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -23,6 +111,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
@@ -63,29 +156,38 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  app:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
-    volumes:
-      - .:/app
-      - /app/node_modules
+  notifications-service:
+    build: ./services/notifications-service
+    restart: always
     ports:
-      - "3000:3000"
+      - "3003:3003"
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
+      - PORT=3003
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
-      - AUTH_SERVICE_URL=http://auth-service:3001
-      - EVENT_SERVICE_URL=http://event-service:3002
-      - STATS_SERVICE_URL=http://stats-service:3005
-      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - NOTIFICATIONS_DATABASE_URL=postgresql://admin:admin@notifications-db:5432/eventflow_notifications
+      - BREVO_API_KEY=change-me
+      - EMAIL_FROM=noreply@eventflow.local
     depends_on:
-      users-db:
-        condition: service_healthy
-      events-db:
-        condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      notifications-db:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - PAYMENTS_DATABASE_URL=postgresql://admin:admin@payments-db:5432/eventflow_payments
+      - JWT_SECRET=secretKey
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      payments-db:
         condition: service_healthy
 
   stats-service:
@@ -105,25 +207,39 @@ services:
       stats-db:
         condition: service_started
 
-  payment-service:
-    build:
-      context: .
-      dockerfile: services/payment-service/Dockerfile
+  app:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
+    volumes:
+      - .:/app
+      - /app/node_modules
     ports:
-      - "3004:3004"
+      - "3000:3000"
     environment:
-      - PORT=3004
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
-      - PAYMENTS_DATABASE_URL=postgresql://admin:admin@payments-db:5432/eventflow_payments
-      - JWT_SECRET=secretKey
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - EVENT_SERVICE_URL=http://event-service:3002
+      - STATS_SERVICE_URL=http://stats-service:3005
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - NOTIFICATIONS_SERVICE_URL=http://notifications-service:3003
     depends_on:
-      rabbitmq:
+      users-db:
         condition: service_healthy
-      payments-db:
+      events-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
 volumes:
-  postgres_data:
+  users_data:
+  events_data:
+  tickets_data:
+  payments_data:
+  notifications_data:
+  stats_data:
 
 networks:
   eventflow-network:

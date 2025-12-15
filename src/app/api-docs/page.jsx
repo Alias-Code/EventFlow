@@ -25,7 +25,6 @@ const swaggerSpec = {
     { name: 'Tickets', description: 'Réservations et billets' },
     { name: 'Payments', description: 'Traitement des paiements' },
     { name: 'Stats', description: 'Statistiques de la plateforme' },
-    { name: 'Notifications', description: 'Notifications (à venir)' },
     { name: 'Health', description: 'Health checks' },
   ],
   components: {
@@ -38,11 +37,6 @@ const swaggerSpec = {
       },
     },
   },
-  security: [
-    {
-      bearerAuth: [],
-    },
-  ],
   paths: {
     '/auth/register': {
       post: {
@@ -91,8 +85,47 @@ const swaggerSpec = {
           },
         },
         responses: {
-          200: { description: 'Connexion réussie' },
+          200: { 
+            description: 'Connexion réussie',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                    user: { type: 'object' },
+                  },
+                },
+              },
+            },
+          },
           401: { description: 'Identifiants invalides' },
+          503: { description: 'Service d\'authentification indisponible' },
+        },
+      },
+    },
+    '/auth/profile': {
+      get: {
+        tags: ['Auth'],
+        summary: 'Récupérer le profil de l\'utilisateur connecté',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { 
+            description: 'Profil utilisateur',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    email: { type: 'string' },
+                    name: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Non authentifié' },
           503: { description: 'Service d\'authentification indisponible' },
         },
       },
@@ -106,7 +139,17 @@ const swaggerSpec = {
           { name: 'date', in: 'query', schema: { type: 'string' }, description: 'Filtrer par date' },
         ],
         responses: {
-          200: { description: 'Liste des événements' },
+          200: { 
+            description: 'Liste des événements',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
           503: { description: 'Service des événements indisponible' },
         },
       },
@@ -148,7 +191,14 @@ const swaggerSpec = {
           { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
         ],
         responses: {
-          200: { description: 'Détails de l\'événement' },
+          200: { 
+            description: 'Détails de l\'événement',
+            content: {
+              'application/json': {
+                schema: { type: 'object' },
+              },
+            },
+          },
           404: { description: 'Événement non trouvé' },
           503: { description: 'Service des événements indisponible' },
         },
@@ -170,6 +220,7 @@ const swaggerSpec = {
                   description: { type: 'string' },
                   date: { type: 'string', format: 'date-time' },
                   location: { type: 'string' },
+                  category: { type: 'string' },
                   capacity: { type: 'integer' },
                   price: { type: 'number' },
                 },
@@ -205,7 +256,17 @@ const swaggerSpec = {
           { name: 'eventId', in: 'query', schema: { type: 'string' }, description: 'Filtrer par événement' },
         ],
         responses: {
-          200: { description: 'Liste des billets' },
+          200: { 
+            description: 'Liste des billets',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
           503: { description: 'Service de billetterie indisponible' },
         },
       },
@@ -236,21 +297,121 @@ const swaggerSpec = {
       },
     },
     '/payments': {
+      get: {
+        tags: ['Payments'],
+        summary: 'Liste tous les paiements',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 100 }, description: 'Nombre de résultats' },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 }, description: 'Décalage pour pagination' },
+        ],
+        responses: {
+          200: { 
+            description: 'Liste des paiements',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
       post: {
         tags: ['Payments'],
-        summary: 'Effectuer un paiement',
+        summary: 'Créer un nouveau paiement',
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['ticketId', 'amount', 'method'],
+                required: ['ticketId', 'eventId', 'amount'],
                 properties: {
                   ticketId: { type: 'string', example: 'ticket_789' },
+                  eventId: { type: 'string', example: 'evt_123' },
                   amount: { type: 'number', example: 91.98 },
-                  method: { type: 'string', enum: ['card', 'paypal', 'bank_transfer'], example: 'card' },
+                  paymentMethod: { type: 'string', enum: ['CARD', 'PAYPAL', 'BANK_TRANSFER', 'FREE'], example: 'CARD' },
                   currency: { type: 'string', default: 'EUR', example: 'EUR' },
+                  metadata: { type: 'object', description: 'Métadonnées optionnelles' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Paiement créé avec succès' },
+          400: { description: 'Données invalides' },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/{id}': {
+      get: {
+        tags: ['Payments'],
+        summary: 'Récupérer un paiement par ID',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'ID du paiement' },
+        ],
+        responses: {
+          200: { 
+            description: 'Détails du paiement',
+            content: {
+              'application/json': {
+                schema: { type: 'object' },
+              },
+            },
+          },
+          404: { description: 'Paiement non trouvé' },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/me': {
+      get: {
+        tags: ['Payments'],
+        summary: 'Récupérer mes paiements (utilisateur connecté)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { 
+            description: 'Liste des paiements de l\'utilisateur',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
+          401: { description: 'Non authentifié' },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/{id}/process': {
+      post: {
+        tags: ['Payments'],
+        summary: 'Traiter un paiement en attente',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'ID du paiement' },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['transactionId'],
+                properties: {
+                  transactionId: { type: 'string', example: 'txn_abc123' },
+                  processorMetadata: { type: 'object', description: 'Métadonnées du processeur de paiement' },
                 },
               },
             },
@@ -258,8 +419,86 @@ const swaggerSpec = {
         },
         responses: {
           200: { description: 'Paiement traité avec succès' },
-          400: { description: 'Données invalides' },
-          402: { description: 'Paiement refusé' },
+          400: { description: 'Paiement ne peut pas être traité' },
+          404: { description: 'Paiement non trouvé' },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/{id}/refund': {
+      post: {
+        tags: ['Payments'],
+        summary: 'Rembourser un paiement',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'ID du paiement' },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['reason'],
+                properties: {
+                  reason: { type: 'string', example: 'Annulation de la réservation' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Paiement remboursé avec succès' },
+          400: { description: 'Paiement ne peut pas être remboursé' },
+          404: { description: 'Paiement non trouvé' },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/ticket/{ticketId}': {
+      get: {
+        tags: ['Payments'],
+        summary: 'Récupérer les paiements pour un ticket',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'ticketId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID du ticket' },
+        ],
+        responses: {
+          200: { 
+            description: 'Liste des paiements pour le ticket',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
+          503: { description: 'Service de paiement indisponible' },
+        },
+      },
+    },
+    '/payments/event/{eventId}': {
+      get: {
+        tags: ['Payments'],
+        summary: 'Récupérer les paiements pour un événement',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'eventId', in: 'path', required: true, schema: { type: 'string' }, description: 'ID de l\'événement' },
+        ],
+        responses: {
+          200: { 
+            description: 'Liste des paiements pour l\'événement',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { type: 'object' },
+                },
+              },
+            },
+          },
           503: { description: 'Service de paiement indisponible' },
         },
       },
@@ -308,6 +547,7 @@ const swaggerSpec = {
               },
             },
           },
+          401: { description: 'Non authentifié' },
           503: { description: 'Service de statistiques indisponible' },
         },
       },
@@ -334,6 +574,8 @@ const swaggerSpec = {
               },
             },
           },
+          401: { description: 'Non authentifié' },
+          503: { description: 'Service de statistiques indisponible' },
         },
       },
     },
@@ -358,6 +600,8 @@ const swaggerSpec = {
               },
             },
           },
+          401: { description: 'Non authentifié' },
+          503: { description: 'Service de statistiques indisponible' },
         },
       },
     },
@@ -382,6 +626,8 @@ const swaggerSpec = {
               },
             },
           },
+          401: { description: 'Non authentifié' },
+          503: { description: 'Service de statistiques indisponible' },
         },
       },
     },
@@ -390,7 +636,20 @@ const swaggerSpec = {
         tags: ['Health'],
         summary: 'Health check du Gateway',
         responses: {
-          200: { description: 'Gateway opérationnel' },
+          200: { 
+            description: 'Gateway opérationnel',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'ok' },
+                    services: { type: 'object' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -409,4 +668,3 @@ export default function ApiDocsPage() {
     </div>
   );
 }
-
