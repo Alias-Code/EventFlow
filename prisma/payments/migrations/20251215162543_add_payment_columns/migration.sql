@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "userId" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "eventId" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "currency" TEXT DEFAULT 'EUR';
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "transactionId" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "failureReason" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "refundedAt" TIMESTAMP(3);
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "refundReason" TEXT;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "metadata" JSONB;
+ALTER TABLE "Payment" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "Payment_transactionId_key" ON "Payment"("transactionId") WHERE "transactionId" IS NOT NULL;
+CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");
+CREATE INDEX IF NOT EXISTS "Payment_eventId_idx" ON "Payment"("eventId");

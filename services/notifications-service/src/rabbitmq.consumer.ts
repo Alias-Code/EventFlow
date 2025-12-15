@@ -26,12 +26,12 @@ class RabbitMQConsumer {
       
       if (!this.channel) throw new Error('Failed to create channel');
       
-      await this.channel.assertExchange('eventflow.events', 'topic', { durable: true });
+      await this.channel.assertExchange('events', 'topic', { durable: true });
       const queue = await this.channel.assertQueue('notifications.queue', { durable: true });
       
       const events = ['ticket.booked', 'payment.processed', 'payment.failed', 'event.cancelled'];
       for (const event of events) {
-        await this.channel.bindQueue(queue.queue, 'eventflow.events', event);
+        await this.channel.bindQueue(queue.queue, 'events', event);
       }
       
       this.consume();

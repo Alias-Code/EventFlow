@@ -5,7 +5,7 @@ import * as amqp from 'amqplib';
 export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
   private connection: any = null;
   private channel: any = null;
-  private readonly exchangeName = 'eventflow_events';
+  private readonly exchangeName = 'events';
 
   async onModuleInit() {
     try {

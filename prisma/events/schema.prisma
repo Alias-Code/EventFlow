@@ -16,8 +16,15 @@ model Event {
   location    String
   category    String
   capacity    Int
-  status      String
-  price       Float?
+  status      String   @default("draft")
+  price       Float?   @default(0)
+  organizerId String
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([date])
+  @@index([organizerId])
 }
 

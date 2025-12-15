@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
     
-    const ticketServiceUrl = process.env.TICKET_SERVICE_URL || 'http://ticket-service:3003';
+    const ticketServiceUrl = process.env.TICKETS_SERVICE_URL || 'http://tickets-service:3006';
     const url = queryString ? `${ticketServiceUrl}/tickets?${queryString}` : `${ticketServiceUrl}/tickets`;
     
     const response = await fetch(url);
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const ticketServiceUrl = process.env.TICKET_SERVICE_URL || 'http://ticket-service:3003';
+    const ticketServiceUrl = process.env.TICKETS_SERVICE_URL || 'http://tickets-service:3006';
     const response = await fetch(`${ticketServiceUrl}/tickets`, {
       method: 'POST',
       headers: {

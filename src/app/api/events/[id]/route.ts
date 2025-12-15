@@ -13,9 +13,15 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
+    const authHeader = request.headers.get('authorization');
     
     const eventServiceUrl = process.env.EVENT_SERVICE_URL || 'http://event-service:3002';
-    const response = await fetch(`${eventServiceUrl}/events/${id}`);
+    const response = await fetch(`${eventServiceUrl}/events/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
+      },
+    });
     const data = await response.json();
     
     return NextResponse.json(data, { status: response.status });
@@ -32,12 +38,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
     const body = await request.json();
+    const authHeader = request.headers.get('authorization');
     
     const eventServiceUrl = process.env.EVENT_SERVICE_URL || 'http://event-service:3002';
     const response = await fetch(`${eventServiceUrl}/events/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
       },
       body: JSON.stringify(body),
     });
@@ -56,10 +64,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
+    const authHeader = request.headers.get('authorization');
     
     const eventServiceUrl = process.env.EVENT_SERVICE_URL || 'http://event-service:3002';
     const response = await fetch(`${eventServiceUrl}/events/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
+      },
     });
 
     const data = await response.json();
