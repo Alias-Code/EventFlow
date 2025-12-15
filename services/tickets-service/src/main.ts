@@ -1,7 +1,8 @@
+import 'dotenv/config';
 import express from "express";
-import { ticketsRouter } from "./tickets/tickets.controller";
-import { RabbitService } from "./rabbit/rabbit.services";
-import { prisma } from "./prisma/prisma.service";
+import { ticketsRouter } from "./tickets/tickets.controller.js";
+import { RabbitService } from "./rabbit/rabbit.services.js";
+import { prisma } from "./prisma/prisma.service.js";
 
 async function bootstrap() {
   await RabbitService.connect(process.env.RABBITMQ_URL!);

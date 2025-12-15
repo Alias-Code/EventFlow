@@ -1,5 +1,5 @@
-import { prisma } from "../prisma/prisma.service";
-import { RabbitService } from "../rabbit/rabbit.services";
+import { prisma } from "../prisma/prisma.service.js";
+import { RabbitService } from "../rabbit/rabbit.services.js";
 import { randomUUID } from "crypto";
 
 

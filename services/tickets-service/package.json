@@ -1,12 +1,14 @@
 {
   "name": "tickets-service",
+  "type": "module",
   "scripts": {
-    "dev": "ts-node-dev src/main.ts",
+    "dev": "npm run build && node dist/main.js",
     "build": "tsc"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",
     "amqplib": "^0.10.9",
+    "dotenv": "^16.3.1",
     "express": "^4.19.2"
   },
   "devDependencies": {
