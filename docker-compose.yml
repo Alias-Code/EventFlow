@@ -137,6 +137,21 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  event-service:
+    build: ./services/event-service
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@events-db:5432/eventflow_events?schema=public
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      PORT: 3002
+    depends_on:
+      events-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   app:
     image: node:20-alpine
     working_dir: /app
@@ -151,6 +166,7 @@ services:
       - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3001
+      - EVENT_SERVICE_URL=http://event-service:3002
       - STATS_SERVICE_URL=http://stats-service:3005
     depends_on:
       users-db:
