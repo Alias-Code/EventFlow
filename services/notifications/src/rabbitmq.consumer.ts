@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
 import type { Connection, Channel, Message } from 'amqplib';
 import EmailService from './email.service.js';
-import templates from './templates.js';
+import templates, { TicketBookedData, PaymentData, EventCancelledData } from './templates.js';
 
 interface EventMessage {
   type: string;
@@ -81,22 +81,22 @@ class RabbitMQConsumer {
     }
   }
 
-  private async handleTicketBooked(data: any): Promise<void> {
+  private async handleTicketBooked(data: TicketBookedData): Promise<void> {
     const template = templates.ticketBooked(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  private async handlePaymentProcessed(data: any): Promise<void> {
+  private async handlePaymentProcessed(data: PaymentData): Promise<void> {
     const template = templates.paymentSuccess(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  private async handlePaymentFailed(data: any): Promise<void> {
+  private async handlePaymentFailed(data: PaymentData): Promise<void> {
     const template = templates.paymentFailed(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }
 
-  private async handleEventCancelled(data: any): Promise<void> {
+  private async handleEventCancelled(data: EventCancelledData): Promise<void> {
     const template = templates.eventCancelled(data);
     await this.emailService.sendEmail(data.userEmail, template.subject, template.html);
   }

@@ -1,9 +1,9 @@
-interface EmailTemplate {
+export interface EmailTemplate {
   subject: string;
   html: string;
 }
 
-interface TicketBookedData {
+export interface TicketBookedData {
   eventName: string;
   userName: string;
   userEmail: string;
@@ -12,14 +12,14 @@ interface TicketBookedData {
   ticketId: string;
 }
 
-interface PaymentData {
+export interface PaymentData {
   userName: string;
   userEmail: string;
   amount: number;
   transactionId: string;
 }
 
-interface EventCancelledData {
+export interface EventCancelledData {
   eventName: string;
   userName: string;
   userEmail: string;
