@@ -1,15 +1,105 @@
 services:
-  postgres:
+  events-db:
     image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow
+      POSTGRES_DB: eventflow_events
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - events_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_events"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tickets-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_tickets
+    ports:
+      - "5433:5432"
+    volumes:
+      - tickets_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_tickets"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payments-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_payments
+    ports:
+      - "5434:5432"
+    volumes:
+      - payments_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notifications-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_notifications
+    ports:
+      - "5435:5432"
+    volumes:
+      - notifications_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_users
+    ports:
+      - "5436:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  stats-db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: eventflow_stats
+    ports:
+      - "5437:5432"
+    volumes:
+      - stats_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_stats"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -20,6 +110,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
@@ -27,5 +122,65 @@ services:
     ports:
       - "9090:8080"
 
+  auth-service:
+    build: ./services/auth-service
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@users-db:5432/eventflow_users?schema=public
+      JWT_SECRET: secretKey
+      PORT: 3001
+    depends_on:
+      users-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  app:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - STATS_SERVICE_URL=http://stats-service:3005
+    depends_on:
+      users-db:
+        condition: service_healthy
+      events-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  stats-service:
+    build:
+      context: .
+      dockerfile: services/stats-service/Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - STATS_DATABASE_URL=postgresql://admin:admin@stats-db:5432/eventflow_stats
+      - JWT_SECRET=secretKey
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      stats-db:
+        condition: service_started
+
 volumes:
-  postgres_data:
+  events_data:
+  tickets_data:
+  payments_data:
+  notifications_data:
+  users_data:
+  stats_data:

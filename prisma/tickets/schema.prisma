@@ -1,0 +1,19 @@
+datasource ticketsDb {
+  provider = "postgresql"
+  url      = env("TICKETS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../prisma/generated/tickets"
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  status    String
+  price     Float
+  createdAt DateTime @default(now())
+}
+

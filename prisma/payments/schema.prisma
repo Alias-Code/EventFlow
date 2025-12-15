@@ -1,0 +1,18 @@
+datasource paymentsDb {
+  provider = "postgresql"
+  url      = env("PAYMENTS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../prisma/generated/payments"
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  ticketId  String
+  amount    Float
+  status    String
+  createdAt DateTime @default(now())
+}
+
