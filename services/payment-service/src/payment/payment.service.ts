@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from
 import { PrismaService } from '../prisma/prisma.service';
 import { RabbitService } from '../rabbit/rabbit.service';
 import { CreatePaymentDto, RefundPaymentDto, ProcessPaymentDto } from './dto';
-import { PaymentStatus, PaymentMethod, Payment } from '../../../prisma/generated/payments';
+import { PaymentStatus, PaymentMethod, Payment } from '../../../../prisma/generated/payments';
 
 @Injectable()
 export class PaymentService implements OnModuleInit {

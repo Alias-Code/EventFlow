@@ -6,7 +6,10 @@
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "build": "tsc -p tsconfig.json",
-    "generate:payments": "prisma generate --schema ../../prisma/payments/schema.prisma"
+    "generate:payments": "prisma generate --schema ../../prisma/payments/schema.prisma",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
@@ -30,6 +33,28 @@
     "@types/amqplib": "^0.10.6",
     "@types/passport-jwt": "^4.0.1",
     "@types/node": "^20.0.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "@nestjs/testing": "^10.4.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.1.2"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "strict": false, "strictPropertyInitialization": false } }]
+    },
+    "collectCoverageFrom": ["**/*.(t|j)s"],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^.*/prisma/generated/payments$": "<rootDir>/__mocks__/prisma-payments.ts",
+      "^../../../prisma/generated/payments$": "<rootDir>/__mocks__/prisma-payments.ts",
+      "^../../../../prisma/generated/payments$": "<rootDir>/__mocks__/prisma-payments.ts",
+      "^../rabbit/rabbit.service$": "<rootDir>/__mocks__/rabbit.service.ts",
+      "^../prisma/prisma.service$": "<rootDir>/__mocks__/prisma.service.ts"
+    }
   }
 }
