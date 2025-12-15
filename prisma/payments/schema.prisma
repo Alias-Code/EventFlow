@@ -1,0 +1,53 @@
+datasource paymentsDb {
+  provider = "postgresql"
+  url      = env("PAYMENTS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/payments"
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  ticketId        String
+  userId          String
+  eventId         String
+  amount          Float
+  currency        String        @default("EUR")
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod
+  transactionId   String?       @unique
+  failureReason   String?
+  refundedAt      DateTime?
+  refundReason    String?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+}
+
+model ProcessedEvent {
+  id        String   @id
+  createdAt DateTime @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  PAYPAL
+  BANK_TRANSFER
+  FREE
+}

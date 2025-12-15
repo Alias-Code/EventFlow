@@ -7,23 +7,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:events": "cross-env PRISMA_MIGRATE_DATASOURCE=eventsDb prisma migrate dev --schema prisma/events/schema.prisma --name init",
+    "migrate:tickets": "cross-env PRISMA_MIGRATE_DATASOURCE=ticketsDb prisma migrate dev --schema prisma/tickets/schema.prisma --name init",
+    "migrate:payments": "cross-env PRISMA_MIGRATE_DATASOURCE=paymentsDb prisma migrate dev --schema prisma/payments/schema.prisma --name init",
+    "migrate:notifications": "cross-env PRISMA_MIGRATE_DATASOURCE=notificationsDb prisma migrate dev --schema prisma/notifications/schema.prisma --name init",
+    "migrate:users": "cross-env PRISMA_MIGRATE_DATASOURCE=usersDb prisma migrate dev --schema prisma/users/schema.prisma --name init",
+    "migrate:stats": "cross-env PRISMA_MIGRATE_DATASOURCE=statsDb prisma migrate dev --schema prisma/stats/schema.prisma --name init"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.19.0",
     "@prisma/client": "^6.19.0",
     "@types/node": "^24.10.1",
     "amqplib": "^0.10.9",
+    "lucide-react": "^0.561.0",
     "next": "16.0.7",
     "pg": "^8.16.3",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "swagger-ui-react": "^5.17.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.10.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",

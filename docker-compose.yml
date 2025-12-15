@@ -2,19 +2,16 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
-    container_name: eventflow-postgres
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow
+      POSTGRES_DB: eventflow_tickets
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - eventflow-network
+      - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -26,10 +23,6 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - eventflow-network
 
   adminer:
     image: adminer
@@ -40,9 +33,81 @@ services:
     networks:
       - eventflow-network
 
+  auth-service:
+    build: ./services/auth-service
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@users-db:5432/eventflow_users?schema=public
+      JWT_SECRET: secretKey
+      PORT: 3001
+    depends_on:
+      users-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  app:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - STATS_SERVICE_URL=http://stats-service:3005
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+    depends_on:
+      users-db:
+        condition: service_healthy
+      events-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  stats-service:
+    build:
+      context: .
+      dockerfile: services/stats-service/Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - STATS_DATABASE_URL=postgresql://admin:admin@stats-db:5432/eventflow_stats
+      - JWT_SECRET=secretKey
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      stats-db:
+        condition: service_started
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - PAYMENTS_DATABASE_URL=postgresql://admin:admin@payments-db:5432/eventflow_payments
+      - JWT_SECRET=secretKey
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      payments-db:
+        condition: service_healthy
+
 volumes:
-  postgres-data:
-  rabbitmq-data:
+  postgres_data:
 
 networks:
   eventflow-network:
