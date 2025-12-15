@@ -11,16 +11,16 @@ export enum PaymentMethodDto {
 export class CreatePaymentDto {
   @ApiProperty({ description: 'ID du ticket à payer' })
   @IsString()
-  ticketId: string;
+  ticketId!: string;
 
   @ApiProperty({ description: 'ID de l\'événement' })
   @IsString()
-  eventId: string;
+  eventId!: string;
 
   @ApiProperty({ description: 'Montant du paiement', minimum: 0 })
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount!: number;
 
   @ApiPropertyOptional({ description: 'Devise du paiement', default: 'EUR' })
   @IsString()
@@ -29,7 +29,7 @@ export class CreatePaymentDto {
 
   @ApiProperty({ description: 'Méthode de paiement', enum: PaymentMethodDto })
   @IsEnum(PaymentMethodDto)
-  paymentMethod: PaymentMethodDto;
+  paymentMethod!: PaymentMethodDto;
 
   @ApiPropertyOptional({ description: 'Métadonnées additionnelles' })
   @IsOptional()

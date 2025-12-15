@@ -1,22 +1,7 @@
-services:
-  events-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow_events
-    ports:
-      - "5432:5432"
-    volumes:
-      - events_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_events"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+version: '3.8'
 
-  tickets-db:
+services:
+  postgres:
     image: postgres:16
     restart: always
     environment:
@@ -24,85 +9,13 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: eventflow_tickets
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - tickets_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_tickets"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  payments-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow_payments
-    ports:
-      - "5434:5432"
-    volumes:
-      - payments_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_payments"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  notifications-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow_notifications
-    ports:
-      - "5435:5432"
-    volumes:
-      - notifications_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_notifications"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  users-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow_users
-    ports:
-      - "5436:5432"
-    volumes:
-      - users_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_users"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  stats-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: eventflow_stats
-    ports:
-      - "5437:5432"
-    volumes:
-      - stats_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d eventflow_stats"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: eventflow-rabbitmq
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: admin
@@ -110,17 +23,15 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   adminer:
     image: adminer
+    container_name: eventflow-adminer
     restart: always
     ports:
       - "9090:8080"
+    networks:
+      - eventflow-network
 
   auth-service:
     build: ./services/auth-service
@@ -133,6 +44,21 @@ services:
       PORT: 3001
     depends_on:
       users-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  event-service:
+    build: ./services/event-service
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@events-db:5432/eventflow_events?schema=public
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+      PORT: 3002
+    depends_on:
+      events-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -151,6 +77,7 @@ services:
       - DATABASE_URL=postgresql://admin:admin@users-db:5432/eventflow_users
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
       - AUTH_SERVICE_URL=http://auth-service:3001
+      - EVENT_SERVICE_URL=http://event-service:3002
       - STATS_SERVICE_URL=http://stats-service:3005
       - PAYMENT_SERVICE_URL=http://payment-service:3004
     depends_on:
@@ -196,9 +123,8 @@ services:
         condition: service_healthy
 
 volumes:
-  events_data:
-  tickets_data:
-  payments_data:
-  notifications_data:
-  users_data:
-  stats_data:
+  postgres_data:
+
+networks:
+  eventflow-network:
+    driver: bridge

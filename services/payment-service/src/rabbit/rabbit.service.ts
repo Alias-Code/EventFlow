@@ -7,7 +7,7 @@ const EXCHANGE_TYPE = 'topic';
 
 @Injectable()
 export class RabbitService implements OnModuleDestroy {
-  private connection?: Connection;
+  private connection?: any;
   private channel?: Channel;
 
   private readonly url = process.env.RABBITMQ_URL || 'amqp://admin:admin@rabbitmq:5672';
@@ -17,6 +17,11 @@ export class RabbitService implements OnModuleDestroy {
 
     this.connection = await amqp.connect(this.url);
     this.channel = await this.connection.createChannel();
+    
+    if (!this.channel) {
+      throw new Error('Failed to create channel');
+    }
+
     await this.channel.assertExchange(EXCHANGE, EXCHANGE_TYPE, { durable: true });
     this.channel.prefetch(10);
     return this.channel;

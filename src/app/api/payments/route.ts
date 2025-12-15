@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const PAYMENT_SERVICE_URL = process.env.PAYMENT_SERVICE_URL || 'http://payment-service:3004';
 
@@ -51,8 +51,9 @@ export async function POST(request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service de paiement indisponible', message: error.message },
+      { error: 'Service de paiement indisponible', message: errorMessage },
       { status: 503 }
     );
   }

@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
 
 /**
  * Proxy vers le microservice Events
  * Route : /api/events/[id]
  */
-export async function GET(request, { params }) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
     
@@ -14,14 +20,15 @@ export async function GET(request, { params }) {
     
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service des événements indisponible', message: error.message },
+      { error: 'Service des événements indisponible', message: errorMessage },
       { status: 503 }
     );
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
     const body = await request.json();
@@ -38,14 +45,15 @@ export async function PUT(request, { params }) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service des événements indisponible', message: error.message },
+      { error: 'Service des événements indisponible', message: errorMessage },
       { status: 503 }
     );
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = params;
     
@@ -57,8 +65,9 @@ export async function DELETE(request, { params }) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Service des événements indisponible', message: error.message },
+      { error: 'Service des événements indisponible', message: errorMessage },
       { status: 503 }
     );
   }
