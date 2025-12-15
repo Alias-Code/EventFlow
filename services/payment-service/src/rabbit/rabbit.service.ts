@@ -7,12 +7,12 @@ const EXCHANGE_TYPE = 'topic';
 
 @Injectable()
 export class RabbitService implements OnModuleDestroy {
-  private connection?: Connection;
-  private channel?: Channel;
+  private connection?: any;
+  private channel?: any;
 
   private readonly url = process.env.RABBITMQ_URL || 'amqp://admin:admin@rabbitmq:5672';
 
-  async getChannel(): Promise<Channel> {
+  async getChannel(): Promise<any> {
     if (this.channel) return this.channel;
 
     this.connection = await amqp.connect(this.url);
@@ -82,7 +82,7 @@ export class RabbitService implements OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     try {
       await this.channel?.close();
-      await this.connection?.close();
+      await (this.connection as any)?.close();
     } catch (err) {
       console.error('[payment-service] rabbit close error', err);
     } finally {

@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from
 import { PrismaService } from '../prisma/prisma.service';
 import { RabbitService } from '../rabbit/rabbit.service';
 import { CreatePaymentDto, RefundPaymentDto, ProcessPaymentDto } from './dto';
-import { PaymentStatus, PaymentMethod, Payment } from '../../../prisma/generated/payments';
+import { PaymentStatus, PaymentMethod, Payment } from '../../../../prisma/generated/payments';
 
 @Injectable()
 export class PaymentService implements OnModuleInit {
@@ -163,7 +163,7 @@ export class PaymentService implements OnModuleInit {
           paymentMethod: PaymentMethod.FREE,
           status: PaymentStatus.COMPLETED,
           transactionId: `free-${Date.now()}`,
-          metadata: dto.metadata,
+          metadata: dto.metadata as any,
         },
       });
 
@@ -180,7 +180,7 @@ export class PaymentService implements OnModuleInit {
         currency: dto.currency || 'EUR',
         paymentMethod: dto.paymentMethod as PaymentMethod,
         status: PaymentStatus.PENDING,
-        metadata: dto.metadata,
+        metadata: dto.metadata as any,
       },
     });
 
@@ -214,7 +214,7 @@ export class PaymentService implements OnModuleInit {
         data: {
           status: PaymentStatus.COMPLETED,
           transactionId: dto.transactionId,
-          metadata: dto.processorMetadata ? { ...(payment.metadata as object || {}), processor: dto.processorMetadata } : payment.metadata,
+          metadata: dto.processorMetadata ? { ...(payment.metadata as object || {}), processor: dto.processorMetadata } : payment.metadata as any,
         },
       });
 

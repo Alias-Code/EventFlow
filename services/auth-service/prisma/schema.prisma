@@ -11,44 +11,6 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  role      String   // participant, organizer, admin
-  tickets   Ticket[]
-  events    Event[]  @relation("OrganizerEvents")
-  createdAt DateTime @default(now())
-}
-
-model Event {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  date        DateTime
-  location    String
-  category    String
-  capacity    Int
-  status      String   // draft, published, cancelled
-  organizer   User     @relation("OrganizerEvents", fields: [organizerId], references: [id])
-  organizerId String
-  tickets     Ticket[]
-  createdAt   DateTime @default(now())
-}
-
-model Ticket {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  event     Event    @relation(fields: [eventId], references: [id])
-  eventId   String
-  status    String   // reserved, waiting_payment, paid, cancelled
-  price     Float
-  createdAt DateTime @default(now())
-  payment   Payment?
-}
-
-model Payment {
-  id        String   @id @default(cuid())
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
-  ticketId  String   @unique
-  amount    Float
-  status    String   // initiated, success, failed, refunded
+  role      String
   createdAt DateTime @default(now())
 }

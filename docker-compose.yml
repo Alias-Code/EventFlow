@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: eventflow_events
     ports:
-      - "5432:5432"
+      - "5438:5432"
     volumes:
       - events_data:/var/lib/postgresql/data
     healthcheck:
@@ -49,6 +49,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+
+
 
   notifications-db:
     image: postgres:16
@@ -202,3 +205,4 @@ volumes:
   notifications_data:
   users_data:
   stats_data:
+  rabbitmq_data:
