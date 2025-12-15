@@ -1,0 +1,22 @@
+datasource db {
+  provider = "postgresql"
+ url      = env("TICKETS_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model EventSnapshot {
+  eventId   String @id
+  capacity  Int
+  cancelled Boolean @default(false)
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  status    String   // waiting_payment | paid | cancelled
+  createdAt DateTime @default(now())
+}
