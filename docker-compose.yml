@@ -207,6 +207,22 @@ services:
       stats-db:
         condition: service_started
 
+  tickets-service:
+    build:
+      context: .
+      dockerfile: services/tickets-service/Dockerfile
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - TICKETS_DATABASE_URL=postgresql://admin:admin@tickets-db:5432/eventflow_tickets
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      tickets-db:
+        condition: service_healthy
+
   app:
     image: node:20-alpine
     working_dir: /app
@@ -225,6 +241,7 @@ services:
       - STATS_SERVICE_URL=http://stats-service:3005
       - PAYMENT_SERVICE_URL=http://payment-service:3004
       - NOTIFICATIONS_SERVICE_URL=http://notifications-service:3003
+      - TICKETS_SERVICE_URL=http://tickets-service:3006
     depends_on:
       users-db:
         condition: service_healthy

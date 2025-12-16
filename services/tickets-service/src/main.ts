@@ -48,8 +48,9 @@ async function bootstrap() {
   app.use(express.json());
   app.use("/tickets", ticketsRouter);
 
-  app.listen(3003, () => {
-    console.log("🎫 tickets-service running on port 3003");
+  const port = process.env.PORT || 3006;
+  app.listen(port, () => {
+    console.log(`🎫 tickets-service running on port ${port}`);
   });
 }
 
